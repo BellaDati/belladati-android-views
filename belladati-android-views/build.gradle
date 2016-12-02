@@ -1,0 +1,54 @@
+apply plugin: 'com.android.library'
+
+ext {
+    bintrayRepo = 'belladati-android-views'
+    bintrayName = 'belladati-android-views'
+
+    publishedGroupId = 'com.inthecheesefactory.thecheeselibrary'
+    libraryName = 'BellaDatiAndroidViews'
+    artifact = 'belladati-android-views'
+
+    libraryDescription = 'BellaDati native components for Android. Charts,Tables and KPIs'
+
+    siteUrl = 'https://github.com/belladati/BellaDatiAndroidViews'
+    gitUrl = 'https://github.com/belladati/BellaDatiAndroidViews.git'
+
+    libraryVersion = '1.1'
+
+    developerId = 'ktafsi46'
+    developerName = 'Karim Tafsi'
+    developerEmail = 'karim.tafsi@belladati.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+
+}
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.github.PhilJay:MPAndroidChart:v2.2.5'
+    compile 'com.belladati:sdk-android:0.9.7'
+}
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
