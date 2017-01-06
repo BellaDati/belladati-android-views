@@ -16,6 +16,7 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,23 +99,55 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
         JsonNode jn = wrapper.loadJson(builder.toString());
 
         JsonNode content = jn.findPath("content");
-        JsonNode elements = content.findPath("elements").get(0).findPath("values");
+        //JsonNode elements = content.findPath("elements").get(0).findPath("values");
+        JsonNode eleCount= content.findPath("elements");
         JsonNode x_axis = content.findPath("x_axis").findPath("labels").findPath("labels");
 
-        String colour=content.findPath("elements").get(0).findPath("colour").asText();
+        List<String> colourList=new ArrayList<String>();
+        for(int c=0;c<eleCount.size();c++)
+        {
+            colourList.add(content.findPath("elements").get(c).findPath("colour").asText());
+        }
+        //String colour=content.findPath("elements").get(0).findPath("colour").asText();
         setupChart();
 
-        List<BarEntry> entries = new ArrayList<BarEntry>();
-        for (int i = 0; i < elements.size(); i++) {
+        List<List<BarEntry>> listsEntries=new ArrayList<List<BarEntry>>();
 
-            entries.add(new BarEntry(elements.get(i).findPath("top").floatValue(), i));
+        for(int k=0; k<eleCount.size();k++)
+        {
+            List<BarEntry> entries = new ArrayList<BarEntry>();
+
+            for (int i = 0; i < eleCount.get(k).findPath("values").size(); i++) {
+
+                entries.add(new BarEntry(eleCount.get(k).findPath("values").get(i).findPath("top").floatValue(),i));
+            }
+
+            listsEntries.add(entries);
+            //entries.clear();
         }
-        BarDataSet dataSet = new BarDataSet(entries,content.findPath("elements").get(0).findPath("text").asText());
-        if(valueTextColor==0)
-            valueTextColor= Color.WHITE;
 
-        dataSet.setColor(rgb(colour));
-        dataSet.setValueTextColor(valueTextColor);
+        List<BarDataSet> listDataSet=new ArrayList<BarDataSet>();
+        for(int x=0;x<listsEntries.size();x++)
+        {
+            listDataSet.add(new BarDataSet(listsEntries.get(x),content.findPath("elements").get(x).findPath("text").asText()));
+        }
+        /*BarDataSet dataSet = new BarDataSet(entries,content.findPath("elements").get(0).findPath("text").asText());
+        if(valueTextColor==0)
+            valueTextColor= Color.WHITE;*/
+
+        for(int f=0;f<listDataSet.size();f++)
+        {
+            listDataSet.get(f).setColor(rgb(colourList.get(f)));
+            listDataSet.get(f).setValueTextColor(rgb(colourList.get(f)));
+
+        }
+        List<IBarDataSet> listIDataSet=new ArrayList<IBarDataSet>();
+        for(int m=0;m<listDataSet.size();m++)
+        {
+            listIDataSet.add(listDataSet.get(m));
+        }
+        /*dataSet.setColor(rgb(colour));
+        dataSet.setValueTextColor(valueTextColor);*/
 
 
 
@@ -126,7 +159,7 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
         String[] xAxis = new String[h_lables.size()];
         xAxis = h_lables.toArray(xAxis);
 
-        BarData barData = new BarData(xAxis,dataSet);
+        BarData barData = new BarData(xAxis,listIDataSet);
         setDescription("");
         setData(barData);
         invalidate();
