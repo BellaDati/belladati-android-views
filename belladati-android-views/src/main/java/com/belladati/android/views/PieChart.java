@@ -32,6 +32,7 @@ public class PieChart extends com.github.mikephil.charting.charts.PieChart {
     }
 
     private String text;
+
     public void setLegendColour(int legendColour) {
         this.legendColour = legendColour;
     }
@@ -44,19 +45,39 @@ public class PieChart extends com.github.mikephil.charting.charts.PieChart {
 
     private String idChart;
 
+    public void setValFromRepToCenter(boolean valFromRepToCenter) {
+        this.valFromRepToCenter = valFromRepToCenter;
+    }
+
+    private boolean valFromRepToCenter;
+
+    public void setHideValues(boolean hideValues) {
+        this.hideValues = hideValues;
+    }
+
+    private boolean hideValues;
+
+    public void setHideLegend(boolean hideLegend) {
+        this.hideLegend = hideLegend;
+    }
+
+    private boolean hideLegend;
+
 
     public void setFilterNode(ObjectNode filterNode) {
         this.filterNode = filterNode;
     }
+
     private ObjectNode filterNode;
 
     public void setService(BellaDatiService service) {
         this.service = service;
-        this.wrapper=new BellaDatiServiceWrapper(this.service);
+        this.wrapper = new BellaDatiServiceWrapper(this.service);
     }
 
     private BellaDatiService service;
     private BellaDatiServiceWrapper wrapper;
+
     public PieChart(Context context) {
         super(context);
     }
@@ -68,20 +89,28 @@ public class PieChart extends com.github.mikephil.charting.charts.PieChart {
     public PieChart(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
+
     public void createPieChart() throws Exception {
-        if(service==null)
-        {
+        createPieChart(null);
+    }
+
+    public void createPieChart(String additionalUriParam) throws Exception {
+        if (service == null) {
             throw new Exception("Service must be set up");
         }
 
-        if(idChart==null)
-        {
+        if (idChart == null) {
             throw new Exception("Detected no chart id");
         }
-        URIBuilder builder = new URIBuilder("api/reports/views/"+idChart+"/chart");
+        URIBuilder builder;
+        if (additionalUriParam != null) {
 
-        if(filterNode!=null)
-        {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart" + additionalUriParam);
+        } else {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart");
+        }
+
+        if (filterNode != null) {
             ObjectNode drilldownNode = new ObjectMapper().createObjectNode();
             drilldownNode.put("drilldown", filterNode);
 
@@ -94,11 +123,13 @@ public class PieChart extends com.github.mikephil.charting.charts.PieChart {
         JsonNode elements = content.findPath("elements").get(0).findPath("values");
         JsonNode colours = content.findPath("elements").get(0).findPath("colours");
         List<String> labels = new ArrayList<>();
+        String valueForCenter = "";
 
         List<Entry> entries = new ArrayList<Entry>();
         for (int i = 0; i < elements.size(); i++) {
 
             entries.add(new Entry(elements.get(i).findPath("value").floatValue(), i));
+            valueForCenter = elements.get(i).findPath("value").asText();
         }
 
         for (int k = 0; k < elements.size(); k++) {
@@ -106,33 +137,44 @@ public class PieChart extends com.github.mikephil.charting.charts.PieChart {
         }
         String[] labelasArray = new String[labels.size()];
         labelasArray = labels.toArray(labelasArray);
-        PieDataSet pieDataSet=new PieDataSet(entries," ");
+        PieDataSet pieDataSet = new PieDataSet(entries, " ");
         pieDataSet.setColors(getColors(colours));
-        PieData pieData=new PieData(labelasArray,pieDataSet);
+        if (hideValues)
+            pieDataSet.setDrawValues(false);
 
-        if(text!=null)
-        {
+        PieData pieData = new PieData(labelasArray, pieDataSet);
+
+
+        if (valFromRepToCenter)
+            setCenterText(generateCenterSpannableText(valueForCenter));
+
+        if (text != null)
             setCenterText(generateCenterSpannableText(text));
-        }
+
+        if (hideValues)
+            setDrawSliceText(false);
+
         setDescription("");
         setData(pieData);
         invalidate();
-        Legend legend = getLegend();
-        if(legendColour==0)
-            legendColour= Color.WHITE;
-        legend.setTextColor(legendColour);
-        legend.setWordWrapEnabled(true);
+        if (!hideLegend) {
+            Legend legend = getLegend();
+            if (legendColour == 0)
+                legendColour = Color.WHITE;
+            legend.setTextColor(legendColour);
+            legend.setWordWrapEnabled(true);
+        }
 
     }
+
     private int[] getColors(JsonNode jnElements) {
 
         int stacksize = jnElements.size();
         // have as many colors as stack-values per entry
         int[] colors = new int[stacksize];
 
-        ArrayList<Integer> colorList=new ArrayList<>();
-        for(int i=0;i<stacksize;i++)
-        {
+        ArrayList<Integer> colorList = new ArrayList<>();
+        for (int i = 0; i < stacksize; i++) {
             colorList.add(rgb(jnElements.get(i).asText()));
         }
         Integer[] MATERIAL_COLORS = colorList.toArray(new Integer[colorList.size()]);
@@ -142,6 +184,7 @@ public class PieChart extends com.github.mikephil.charting.charts.PieChart {
 
         return colors;
     }
+
     private SpannableString generateCenterSpannableText(String text) {
 
         SpannableString s = new SpannableString(text);

@@ -38,6 +38,7 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
     }
 
     private int valueTextColor;
+
     public void setIdChart(String idChart) {
         this.idChart = idChart;
     }
@@ -59,7 +60,7 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
 
     public void setService(BellaDatiService service) {
         this.service = service;
-        this.wrapper=new BellaDatiServiceWrapper(this.service);
+        this.wrapper = new BellaDatiServiceWrapper(this.service);
     }
 
     private BellaDatiService service;
@@ -76,20 +77,27 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
     public BarChart(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
+
     public void createBarChart() throws Exception {
-        if(service==null)
-        {
+        createBarChart(null);
+    }
+
+    public void createBarChart(String additionalUriParam) throws Exception {
+        if (service == null) {
             throw new Exception("Service must be set up");
         }
 
-        if(idChart==null)
-        {
+        if (idChart == null) {
             throw new Exception("Detected no chart id");
         }
-        URIBuilder builder = new URIBuilder("api/reports/views/"+idChart+"/chart");
+        URIBuilder builder;
+        if (additionalUriParam != null) {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart" + additionalUriParam);
+        } else {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart");
+        }
 
-        if(filterNode!=null)
-        {
+        if (filterNode != null) {
             ObjectNode drilldownNode = new ObjectMapper().createObjectNode();
             drilldownNode.put("drilldown", filterNode);
 
@@ -100,55 +108,49 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
 
         JsonNode content = jn.findPath("content");
         //JsonNode elements = content.findPath("elements").get(0).findPath("values");
-        JsonNode eleCount= content.findPath("elements");
+        JsonNode eleCount = content.findPath("elements");
         JsonNode x_axis = content.findPath("x_axis").findPath("labels").findPath("labels");
 
-        List<String> colourList=new ArrayList<String>();
-        for(int c=0;c<eleCount.size();c++)
-        {
+        List<String> colourList = new ArrayList<String>();
+        for (int c = 0; c < eleCount.size(); c++) {
             colourList.add(content.findPath("elements").get(c).findPath("colour").asText());
         }
         //String colour=content.findPath("elements").get(0).findPath("colour").asText();
         setupChart();
 
-        List<List<BarEntry>> listsEntries=new ArrayList<List<BarEntry>>();
+        List<List<BarEntry>> listsEntries = new ArrayList<List<BarEntry>>();
 
-        for(int k=0; k<eleCount.size();k++)
-        {
+        for (int k = 0; k < eleCount.size(); k++) {
             List<BarEntry> entries = new ArrayList<BarEntry>();
 
             for (int i = 0; i < eleCount.get(k).findPath("values").size(); i++) {
 
-                entries.add(new BarEntry(eleCount.get(k).findPath("values").get(i).findPath("top").floatValue(),i));
+                entries.add(new BarEntry(eleCount.get(k).findPath("values").get(i).findPath("top").floatValue(), i));
             }
 
             listsEntries.add(entries);
             //entries.clear();
         }
 
-        List<BarDataSet> listDataSet=new ArrayList<BarDataSet>();
-        for(int x=0;x<listsEntries.size();x++)
-        {
-            listDataSet.add(new BarDataSet(listsEntries.get(x),content.findPath("elements").get(x).findPath("text").asText()));
+        List<BarDataSet> listDataSet = new ArrayList<BarDataSet>();
+        for (int x = 0; x < listsEntries.size(); x++) {
+            listDataSet.add(new BarDataSet(listsEntries.get(x), content.findPath("elements").get(x).findPath("text").asText()));
         }
         /*BarDataSet dataSet = new BarDataSet(entries,content.findPath("elements").get(0).findPath("text").asText());
         if(valueTextColor==0)
             valueTextColor= Color.WHITE;*/
 
-        for(int f=0;f<listDataSet.size();f++)
-        {
+        for (int f = 0; f < listDataSet.size(); f++) {
             listDataSet.get(f).setColor(rgb(colourList.get(f)));
             listDataSet.get(f).setValueTextColor(rgb(colourList.get(f)));
 
         }
-        List<IBarDataSet> listIDataSet=new ArrayList<IBarDataSet>();
-        for(int m=0;m<listDataSet.size();m++)
-        {
+        List<IBarDataSet> listIDataSet = new ArrayList<IBarDataSet>();
+        for (int m = 0; m < listDataSet.size(); m++) {
             listIDataSet.add(listDataSet.get(m));
         }
         /*dataSet.setColor(rgb(colour));
         dataSet.setValueTextColor(valueTextColor);*/
-
 
 
         List<String> h_lables = new ArrayList<>();
@@ -159,20 +161,21 @@ public class BarChart extends com.github.mikephil.charting.charts.BarChart {
         String[] xAxis = new String[h_lables.size()];
         xAxis = h_lables.toArray(xAxis);
 
-        BarData barData = new BarData(xAxis,listIDataSet);
+        BarData barData = new BarData(xAxis, listIDataSet);
         setDescription("");
         setData(barData);
         invalidate();
         Legend legend = getLegend();
-        if(legendColour==0)
-            legendColour= Color.WHITE;
+        if (legendColour == 0)
+            legendColour = Color.WHITE;
         legend.setTextColor(legendColour);
         legend.setWordWrapEnabled(true);
 
     }
-    private void setupChart( ) {
-        if(axesTextColour==0)
-            axesTextColour= Color.WHITE;
+
+    private void setupChart() {
+        if (axesTextColour == 0)
+            axesTextColour = Color.WHITE;
         setMaxVisibleValueCount(40);
         // scaling can now only be done on x- and y-axis separately
         setPinchZoom(false);

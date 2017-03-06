@@ -29,7 +29,7 @@ import static com.github.mikephil.charting.utils.ColorTemplate.rgb;
 /**
  * Created by KarimT on 29.11.2016.
  */
-public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
+public class LineChart extends com.github.mikephil.charting.charts.LineChart {
 
     public void setAxesTextColour(int axesTextColour) {
         this.axesTextColour = axesTextColour;
@@ -42,12 +42,12 @@ public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
     }
 
     private int valueTextColor;
+
     public void setIdChart(String idChart) {
         this.idChart = idChart;
     }
 
     private String idChart;
-
 
     public void setFilterNode(ObjectNode filterNode) {
         this.filterNode = filterNode;
@@ -63,7 +63,7 @@ public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
 
     public void setService(BellaDatiService service) {
         this.service = service;
-        this.wrapper=new BellaDatiServiceWrapper(this.service);
+        this.wrapper = new BellaDatiServiceWrapper(this.service);
     }
 
     private BellaDatiService service;
@@ -83,19 +83,26 @@ public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
     }
 
     public void createChart() throws Exception {
-        if(service==null)
-        {
+        createChart(null);
+    }
+
+    public void createChart(String additionalUriParam) throws Exception {
+        if (service == null) {
             throw new Exception("Service must be set up");
         }
 
-        if(idChart==null)
-        {
+        if (idChart == null) {
             throw new Exception("Detected no chart id");
         }
-        URIBuilder builder = new URIBuilder("api/reports/views/"+idChart+"/chart");
+        URIBuilder builder;
+        if (additionalUriParam != null) {
 
-        if(filterNode!=null)
-        {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart" + additionalUriParam);
+        } else {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart");
+        }
+
+        if (filterNode != null) {
             ObjectNode drilldownNode = new ObjectMapper().createObjectNode();
             drilldownNode.put("drilldown", filterNode);
 
@@ -103,31 +110,29 @@ public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
         }
 
         JsonNode jn = wrapper.loadJson(builder.toString());
-        JsonNode elementValue,elementValues;
+        JsonNode elementValue, elementValues;
         JsonNode content = jn.findPath("content");
         //JsonNode elements = content.findPath("elements").get(0).findPath("values");
-        JsonNode eleCount= content.findPath("elements");
+        JsonNode eleCount = content.findPath("elements");
 
         JsonNode x_axis = content.findPath("x_axis").findPath("labels").findPath("labels");
 
-        List<String> colourList=new ArrayList<String>();
-        for(int c=0;c<eleCount.size();c++)
-        {
+        List<String> colourList = new ArrayList<String>();
+        for (int c = 0; c < eleCount.size(); c++) {
             colourList.add(content.findPath("elements").get(c).findPath("colour").asText());
         }
         //String colour=content.findPath("elements").get(0).findPath("colour").asText();
         setupChart();
-        List<List<Entry>> listsEntries=new ArrayList<List<Entry>>();
+        List<List<Entry>> listsEntries = new ArrayList<List<Entry>>();
 
-        for(int k=0; k<eleCount.size();k++)
-        {
+        for (int k = 0; k < eleCount.size(); k++) {
             List<Entry> entries = new ArrayList<Entry>();
 
-            elementValues=eleCount.get(k).findPath("values");
+            elementValues = eleCount.get(k).findPath("values");
             for (int i = 0; i < elementValues.size(); i++) {
-                elementValue=elementValues.get(i).findPath("value");
-                Float val=elementValue.floatValue();
-                entries.add(new Entry(val,i));
+                elementValue = elementValues.get(i).findPath("value");
+                Float val = elementValue.floatValue();
+                entries.add(new Entry(val, i));
             }
 
             listsEntries.add(entries);
@@ -139,25 +144,22 @@ public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
 
             entries.add(new Entry(elements.get(i).findPath("value").floatValue(), i));
         }*/
-        List<LineDataSet> listDataSet=new ArrayList<LineDataSet>();
-        for(int x=0;x<listsEntries.size();x++)
-        {
-            listDataSet.add(new LineDataSet(listsEntries.get(x),content.findPath("elements").get(x).findPath("text").asText()));
+        List<LineDataSet> listDataSet = new ArrayList<LineDataSet>();
+        for (int x = 0; x < listsEntries.size(); x++) {
+            listDataSet.add(new LineDataSet(listsEntries.get(x), content.findPath("elements").get(x).findPath("text").asText()));
         }
         //LineDataSet dataSet = new LineDataSet(entries,content.findPath("elements").get(0).findPath("text").asText());
         /*if(valueTextColor==0)
             valueTextColor= Color.WHITE;*/
-        for(int f=0;f<listDataSet.size();f++)
-        {
+        for (int f = 0; f < listDataSet.size(); f++) {
             listDataSet.get(f).setColor(rgb(colourList.get(f)));
             listDataSet.get(f).setValueTextColor(rgb(colourList.get(f)));
             listDataSet.get(f).setDrawFilled(true);
             listDataSet.get(f).setDrawCubic(true);
 
         }
-        List<ILineDataSet> listIDataSet=new ArrayList<ILineDataSet>();
-        for(int m=0;m<listDataSet.size();m++)
-        {
+        List<ILineDataSet> listIDataSet = new ArrayList<ILineDataSet>();
+        for (int m = 0; m < listDataSet.size(); m++) {
             listIDataSet.add(listDataSet.get(m));
         }
 
@@ -175,20 +177,21 @@ public class LineChart extends com.github.mikephil.charting.charts.LineChart  {
         String[] xAxis = new String[h_lables.size()];
         xAxis = h_lables.toArray(xAxis);
 
-        LineData lineData = new LineData(xAxis,listIDataSet);
+        LineData lineData = new LineData(xAxis, listIDataSet);
         setDescription("");
         setData(lineData);
         invalidate();
         Legend legend = getLegend();
-        if(legendColour==0)
-            legendColour= Color.WHITE;
+        if (legendColour == 0)
+            legendColour = Color.WHITE;
         legend.setTextColor(legendColour);
         legend.setWordWrapEnabled(true);
 
     }
-    private void setupChart( ) {
-        if(axesTextColour==0)
-            axesTextColour= Color.WHITE;
+
+    private void setupChart() {
+        if (axesTextColour == 0)
+            axesTextColour = Color.WHITE;
         setMaxVisibleValueCount(40);
         // scaling can now only be done on x- and y-axis separately
         setPinchZoom(false);

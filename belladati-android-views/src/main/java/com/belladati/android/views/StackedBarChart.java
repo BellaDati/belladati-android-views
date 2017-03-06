@@ -41,6 +41,7 @@ public class StackedBarChart extends com.github.mikephil.charting.charts.BarChar
     }
 
     private String idChart;
+
     public void setLegendColour(int legendColour) {
         this.legendColour = legendColour;
     }
@@ -52,14 +53,16 @@ public class StackedBarChart extends com.github.mikephil.charting.charts.BarChar
     }
 
     private int valueTextColor;
+
     public void setFilterNode(ObjectNode filterNode) {
         this.filterNode = filterNode;
     }
 
     private ObjectNode filterNode;
+
     public void setService(BellaDatiService service) {
         this.service = service;
-        this.wrapper=new BellaDatiServiceWrapper(this.service);
+        this.wrapper = new BellaDatiServiceWrapper(this.service);
     }
 
     private BellaDatiService service;
@@ -78,18 +81,25 @@ public class StackedBarChart extends com.github.mikephil.charting.charts.BarChar
     }
 
     public void createStackedBarChart() throws Exception {
-        if(service==null)
-        {
+        createStackedBarChart(null);
+    }
+
+    public void createStackedBarChart(String additionalUriParam) throws Exception {
+        if (service == null) {
             throw new Exception("Service must be set up");
         }
-        if(idChart==null)
-        {
+        if (idChart == null) {
             throw new Exception("Detected no chart id");
         }
-        URIBuilder builder = new URIBuilder("api/reports/views/"+idChart+"/chart");
+        URIBuilder builder;
+        if (additionalUriParam != null) {
 
-        if(filterNode!=null)
-        {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart" + additionalUriParam);
+        } else {
+            builder = new URIBuilder("api/reports/views/" + idChart + "/chart");
+        }
+
+        if (filterNode != null) {
             ObjectNode drilldownNode = new ObjectMapper().createObjectNode();
             drilldownNode.put("drilldown", filterNode);
 
@@ -142,16 +152,16 @@ public class StackedBarChart extends com.github.mikephil.charting.charts.BarChar
         xAxis = h_lables.toArray(xAxis);
 
         BarData data = new BarData(xAxis, dataSets);
-        if(valueTextColor==0)
-            valueTextColor= Color.WHITE;
+        if (valueTextColor == 0)
+            valueTextColor = Color.WHITE;
         data.setValueTextColor(valueTextColor);
         data.setValueFormatter(new MyValueFormatter());
         setDescription("");
         setData(data);
 
         Legend legend = getLegend();
-        if(legendColour==0)
-            legendColour= Color.WHITE;
+        if (legendColour == 0)
+            legendColour = Color.WHITE;
         legend.setTextColor(legendColour);
         legend.setWordWrapEnabled(true);
     }
@@ -162,9 +172,8 @@ public class StackedBarChart extends com.github.mikephil.charting.charts.BarChar
         // have as many colors as stack-values per entry
         int[] colors = new int[stacksize];
 
-        ArrayList<Integer> colorList=new ArrayList<>();
-        for(int i=0;i<stacksize;i++)
-        {
+        ArrayList<Integer> colorList = new ArrayList<>();
+        for (int i = 0; i < stacksize; i++) {
             colorList.add(rgb(jnElements.get(i).findPath("colour").asText()));
         }
         Integer[] MATERIAL_COLORS = colorList.toArray(new Integer[colorList.size()]);
@@ -174,9 +183,10 @@ public class StackedBarChart extends com.github.mikephil.charting.charts.BarChar
 
         return colors;
     }
+
     private void setupChart() {
-        if(axesTextColour==0)
-            axesTextColour= Color.WHITE;
+        if (axesTextColour == 0)
+            axesTextColour = Color.WHITE;
         setMaxVisibleValueCount(40);
         // scaling can now only be done on x- and y-axis separately
         setPinchZoom(false);

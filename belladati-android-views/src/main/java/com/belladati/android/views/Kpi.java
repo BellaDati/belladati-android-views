@@ -42,10 +42,17 @@ public class Kpi extends LinearLayout {
     }
 
     private ObjectNode filterNode;
+
     public void setService(BellaDatiService service) {
         this.service = service;
-        this.wrapper=new BellaDatiServiceWrapper(this.service);
+        this.wrapper = new BellaDatiServiceWrapper(this.service);
     }
+
+    public void setTextSize(int textSize) {
+        this.textSize = textSize;
+    }
+
+    private int textSize;
 
     private BellaDatiService service;
     private BellaDatiServiceWrapper wrapper;
@@ -70,43 +77,63 @@ public class Kpi extends LinearLayout {
     private String idKpi;
 
     public void fillKpi() throws Exception {
-        if(service==null)
-        {
+        fillKpi(null);
+    }
+
+    public void fillKpi(String additionalUriParam) throws Exception {
+        if (service == null) {
             throw new Exception("Service must be set up");
         }
 
-        if(idKpi==null)
-        {
+        if (idKpi == null) {
             throw new Exception("Detected no chart id");
         }
-        URIBuilder  builder = new URIBuilder("api/reports/views/"+idKpi+"/kpi");
+        URIBuilder builder;
+        if (additionalUriParam != null) {
+            builder = new URIBuilder("api/reports/views/" + idKpi + "/kpi" + additionalUriParam);
 
-        if(filterNode!=null)
-        {
+        } else {
+            builder = new URIBuilder("api/reports/views/" + idKpi + "/kpi");
+        }
+
+        if (filterNode != null) {
             ObjectNode drilldownNode = new ObjectMapper().createObjectNode();
             drilldownNode.put("drilldown", filterNode);
             builder.addParameter("filter", drilldownNode.toString());
         }
 
         JsonNode jsonNode = wrapper.loadJson(builder.toString()).findPath("values");
-        for(int i=0;i<jsonNode.size();i++)
-        {
+        for (int i = 0; i < jsonNode.size(); i++) {
             TextView tvItem = new TextView(getContext());
             tvItem.setText(jsonNode.get(i).findPath("caption").asText());
-            tvItem.setTextSize(25);
+            if(textSize>0)
+            {
+                tvItem.setTextSize(textSize);
+            }
+            else
+            {
+                tvItem.setTextSize(25);
+            }
             tvItem.setPadding(20, 20, 20, 20);
             tvItem.setLayoutParams(new TableLayout.LayoutParams(0, TableLayout.LayoutParams.WRAP_CONTENT, 1f));
             tvItem.setTextColor(Color.BLACK);
             LinearLayout linearItemsRow = new LinearLayout(getContext());
             linearItemsRow.setOrientation(LinearLayout.HORIZONTAL);
-            linearItemsRow.setPadding(20,20,20,20);
+            linearItemsRow.setPadding(20, 20, 20, 20);
             linearItemsRow.setBackground(background);
             LinearLayout.LayoutParams LLParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             linearItemsRow.setLayoutParams(LLParams);
             linearItemsRow.addView(tvItem);
             TextView tvPrize = new TextView(getContext());
             tvPrize.setText(jsonNode.get(i).findPath("numberValue").asText());
-            tvPrize.setTextSize(25);
+            if(textSize>0)
+            {
+                tvPrize.setTextSize(textSize);
+            }
+            else
+            {
+                tvPrize.setTextSize(25);
+            }
             tvPrize.setPadding(20, 20, 20, 20);
             tvPrize.setGravity(Gravity.RIGHT);
             tvPrize.setTextColor(textColor);
